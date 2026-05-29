@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+# Build
+dist/
+# Env / secrets
+.env
+.env.*
+!.env.example
+# Firebase
+.firebase/
+firebase-debug.log
+# IA / privadas
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+GEMINI*.md
+# Sistema
+.DS_Store
+*.log
