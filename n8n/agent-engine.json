@@ -1,0 +1,350 @@
+{
+  "name": "AgentForge — Agent Engine",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "agentforge-message",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "1f0a0001-0000-4000-8000-000000000001",
+      "name": "Webhook mensaje",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "agentforge-message"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://firestore.googleapis.com/v1/projects/agent-forge-app/databases/(default)/documents/messages/{{ $json.body.messageId }}?updateMask.fieldPaths=status",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"fields\": {\"status\": {\"stringValue\": \"processing\"} } }",
+        "options": {}
+      },
+      "id": "1f0a0001-0000-4000-8000-000000000002",
+      "name": "Marcar processing",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        200,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://firestore.googleapis.com/v1/projects/agent-forge-app/databases/(default)/documents/agents/{{ $('Webhook mensaje').item.json.body.agentId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "options": {}
+      },
+      "id": "1f0a0001-0000-4000-8000-000000000003",
+      "name": "Leer agente",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        400,
+        0
+      ],
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://firestore.googleapis.com/v1/projects/agent-forge-app/databases/(default)/documents:runQuery",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ structuredQuery: { from: [{ collectionId: 'messages' }], where: { fieldFilter: { field: { fieldPath: 'conversationId' }, op: 'EQUAL', value: { stringValue: $('Webhook mensaje').item.json.body.conversationId } } }, orderBy: [{ field: { fieldPath: 'timestamp' }, direction: 'DESCENDING' }], limit: (($json.fields && $json.fields.shortTermWindow && $json.fields.shortTermWindow.integerValue) ? Number($json.fields.shortTermWindow.integerValue) : 10) } }) }}",
+        "options": {}
+      },
+      "id": "1f0a0001-0000-4000-8000-000000000004",
+      "name": "Leer mensajes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        600,
+        0
+      ],
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "url": "=https://firestore.googleapis.com/v1/projects/agent-forge-app/databases/(default)/documents/memory/{{ $('Webhook mensaje').item.json.body.agentId }}/facts?pageSize=100",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "options": {}
+      },
+      "id": "1f0a0001-0000-4000-8000-000000000005",
+      "name": "Leer memoria",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        800,
+        0
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Construye la petición a Claude: system prompt + memoria + historial short-term.\nconst agent = $('Leer agente').first().json;\nconst webhookBody = $('Webhook mensaje').first().json.body;\nconst queryRows = $('Leer mensajes').all().map(i => i.json).filter(r => r.document);\nconst memoryDocs = $('Leer memoria').first().json.documents || [];\n\nconst systemPrompt = agent.fields?.systemPrompt?.stringValue || 'Eres un asistente útil.';\nconst facts = memoryDocs\n  .map(d => d.fields?.content?.stringValue)\n  .filter(Boolean);\n\nconst system = facts.length\n  ? `${systemPrompt}\\n\\nMemoria (hechos conocidos sobre este cliente):\\n- ${facts.join('\\n- ')}`\n  : systemPrompt;\n\n// runQuery devuelve DESC → invertir a orden cronológico.\nconst history = queryRows\n  .map(r => ({\n    role: r.document.fields?.role?.stringValue,\n    content: r.document.fields?.content?.stringValue,\n    status: r.document.fields?.status?.stringValue,\n  }))\n  .filter(m => m.role && m.content && m.status !== 'error')\n  .reverse();\n\n// Asegurar que el historial termina con el mensaje actual del usuario.\nif (!history.length || history[history.length - 1].content !== webhookBody.content) {\n  history.push({ role: 'user', content: webhookBody.content });\n}\n\nconst messages = history.map(({ role, content }) => ({ role, content }));\n\nreturn [{\n  json: {\n    claudeRequest: {\n      model: 'claude-sonnet-4-6',\n      max_tokens: 1024,\n      system,\n      messages,\n    },\n  },\n}];"
+      },
+      "id": "1f0a0001-0000-4000-8000-000000000006",
+      "name": "Construir prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.claudeRequest) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "1f0a0001-0000-4000-8000-000000000007",
+      "name": "Claude API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1200,
+        0
+      ],
+      "onError": "continueErrorOutput",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REEMPLAZAR",
+          "name": "Claude API Key (header x-api-key)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://firestore.googleapis.com/v1/projects/agent-forge-app/databases/(default)/documents/messages",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { conversationId: { stringValue: $('Webhook mensaje').item.json.body.conversationId }, agentId: { stringValue: $('Webhook mensaje').item.json.body.agentId }, role: { stringValue: 'assistant' }, content: { stringValue: $json.content[0].text }, status: { stringValue: 'done' }, timestamp: { timestampValue: new Date().toISOString() } } }) }}",
+        "options": {}
+      },
+      "id": "1f0a0001-0000-4000-8000-000000000008",
+      "name": "Guardar respuesta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1400,
+        -80
+      ],
+      "retryOnFail": true
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://firestore.googleapis.com/v1/projects/agent-forge-app/databases/(default)/documents/messages/{{ $('Webhook mensaje').item.json.body.messageId }}?updateMask.fieldPaths=status",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"fields\": {\"status\": {\"stringValue\": \"done\"} } }",
+        "options": {}
+      },
+      "id": "1f0a0001-0000-4000-8000-000000000009",
+      "name": "Mensaje user done",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1600,
+        -80
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://firestore.googleapis.com/v1/projects/agent-forge-app/databases/(default)/documents/conversations/{{ $('Webhook mensaje').item.json.body.conversationId }}?updateMask.fieldPaths=lastMessage",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ fields: { lastMessage: { stringValue: $('Claude API').item.json.content[0].text.slice(0, 200) } } }) }}",
+        "options": {}
+      },
+      "id": "1f0a0001-0000-4000-8000-00000000000a",
+      "name": "Actualizar conversación",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1800,
+        -80
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://firestore.googleapis.com/v1/projects/agent-forge-app/databases/(default)/documents/messages/{{ $('Webhook mensaje').item.json.body.messageId }}?updateMask.fieldPaths=status",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleApi",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"fields\": {\"status\": {\"stringValue\": \"error\"} } }",
+        "options": {}
+      },
+      "id": "1f0a0001-0000-4000-8000-00000000000b",
+      "name": "Mensaje user error",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1400,
+        120
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Webhook mensaje": {
+      "main": [
+        [
+          {
+            "node": "Marcar processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar processing": {
+      "main": [
+        [
+          {
+            "node": "Leer agente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer agente": {
+      "main": [
+        [
+          {
+            "node": "Leer mensajes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer mensajes": {
+      "main": [
+        [
+          {
+            "node": "Leer memoria",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer memoria": {
+      "main": [
+        [
+          {
+            "node": "Construir prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construir prompt": {
+      "main": [
+        [
+          {
+            "node": "Claude API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Claude API": {
+      "main": [
+        [
+          {
+            "node": "Guardar respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mensaje user error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar respuesta": {
+      "main": [
+        [
+          {
+            "node": "Mensaje user done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensaje user done": {
+      "main": [
+        [
+          {
+            "node": "Actualizar conversación",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "active": false
+}

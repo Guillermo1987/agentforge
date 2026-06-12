@@ -1,0 +1,51 @@
+rules_version = '2';
+
+// AgentForge — reglas Firestore (plan Spark, sin Cloud Functions).
+// El Agent Engine (n8n) escribe con service account (Admin SDK): NO pasa por estas reglas.
+// El chat público (/chat/{agentId}) opera sin autenticación; el admin requiere Firebase Auth.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null;
+    }
+
+    // Config de agentes: lectura pública individual (el chat necesita nombre,
+    // color y estado). Listado y escritura solo para la agencia autenticada.
+    match /agents/{agentId} {
+      allow get: if true;
+      allow list, create, update, delete: if isAdmin();
+    }
+
+    // Conversaciones: el cliente final crea la suya y actualiza lastMessage.
+    match /conversations/{conversationId} {
+      allow get, create: if true;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys()
+                       .hasOnly(['lastMessage', 'updatedAt']);
+      allow list, delete: if isAdmin();
+    }
+
+    // Mensajes: el cliente solo crea mensajes propios (role user, status pending).
+    // La respuesta del agente la escribe n8n via Admin SDK.
+    // NOTA MVP: list es público para el listener realtime del chat; el cliente
+    // filtra por conversationId (UUID no adivinable). Endurecer en v1.1.
+    match /messages/{messageId} {
+      allow read: if true;
+      allow create: if request.resource.data.role == 'user'
+                    && request.resource.data.status == 'pending'
+                    && request.resource.data.content is string
+                    && request.resource.data.content.size() > 0
+                    && request.resource.data.content.size() <= 4000;
+      // El cliente solo puede marcar su mensaje como 'error' si el webhook falla.
+      allow update: if isAdmin()
+                    || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status'])
+                        && request.resource.data.status == 'error');
+      allow delete: if isAdmin();
+    }
+
+    // Memoria long-term: solo la agencia la ve/edita desde el dashboard.
+    match /memory/{agentId}/facts/{factId} {
+      allow read, write: if isAdmin();
+    }
+  }
+}

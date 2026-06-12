@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+html, body, #root {
+  height: 100%;
+}
+
+/* Utilidades compartidas del admin */
+.input {
+  @apply w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 outline-none focus:border-zinc-500;
+}
+
+.btn-ghost {
+  @apply rounded-md border border-zinc-700 px-3 py-1.5 text-zinc-300 transition hover:bg-zinc-800;
+}
