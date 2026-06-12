@@ -17,3 +17,4 @@ GEMINI*.md
 # Sistema
 .DS_Store
 *.log
+tsconfig.tsbuildinfo
