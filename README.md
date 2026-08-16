@@ -99,7 +99,7 @@ Setup fee per agent (~€500) + monthly retainer (~€150/agent). Built entirely
 
 Released under the **[MIT License](LICENSE)**.
 
-- **LinkedIn:** [Mindset & Code](https://www.linkedin.com/company/mindset-code)
+- **Web:** [mindset-code.com](https://mindset-code.com/es)
 - **Email:** contacto@mindset-code.com
 
 ---
@@ -202,9 +202,9 @@ Setup fee por agente (~500€) + retainer mensual (~150€/agente). Construido �
 
 Publicado bajo la **[Licencia MIT](LICENSE)**.
 
-- **LinkedIn:** [Mindset & Code](https://www.linkedin.com/company/mindset-code)
+- **Web:** [mindset-code.com](https://mindset-code.com/es)
 - **Email:** contacto@mindset-code.com
 
 ---
 
-*Built by [Mindset & Code](https://github.com/mindset-code) · Data & BI Analyst · MBA · ISC2 CC*
+*Mindset & Code · asesoría fiscal y tecnológica · [mindset-code.com](https://mindset-code.com/es)*
