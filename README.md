@@ -207,4 +207,6 @@ Publicado bajo la **[Licencia MIT](LICENSE)**.
 
 ---
 
+**Ficha del proyecto:** [AgentForge en mindset-code.com](https://mindset-code.com/es/codigo/agentforge) — qué problema resuelve, para quién y con qué está construido.
+
 *Mindset & Code · asesoría fiscal y tecnológica · [mindset-code.com](https://mindset-code.com/es)*
