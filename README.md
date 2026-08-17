@@ -85,7 +85,12 @@ Tracked as 5 epics (see project board):
 
 ## Business model
 
-Setup fee per agent (~€500) + monthly retainer (~€150/agent). Built entirely on free/self-hosted tiers (Firebase Spark, self-hosted n8n) to keep operating cost near zero.
+AgentForge is sold through the Mindset & Code catalogue, where the scope and price of each
+engagement are set out in writing: **[AgentForge](https://mindset-code.com/en/codigo/agentforge)**.
+
+What matters technically is that it runs entirely on free or self-hosted tiers — Firebase
+Spark, our own n8n — so the operating cost per deployed agent stays close to zero. That is
+what makes one agent per client viable in the first place.
 
 ---
 
@@ -188,7 +193,12 @@ Organizado en 5 épicas (ver tablero del proyecto):
 
 ## Modelo de negocio
 
-Setup fee por agente (~500€) + retainer mensual (~150€/agente). Construido íntegramente sobre tiers gratuitos/self-hosted (Firebase Spark, n8n self-hosted) para mantener el coste operativo cercano a cero.
+AgentForge se contrata desde el catálogo de Mindset & Code, donde el alcance y el precio de
+cada encargo van por escrito: **[AgentForge](https://mindset-code.com/es/codigo/agentforge)**.
+
+Lo relevante técnicamente es que corre íntegramente sobre capas gratuitas o autoalojadas
+—Firebase Spark, n8n propio—, así que el coste de operación por agente desplegado se queda
+cerca de cero. Eso es justamente lo que hace viable un agente por cliente.
 
 ---
 
