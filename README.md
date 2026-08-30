@@ -11,6 +11,10 @@
 [![Domain](https://img.shields.io/badge/Domain-AI%20Agents%20%C2%B7%20SaaS-16a34a?style=for-the-badge)](.)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)](LICENSE)
 
+[![AgentForge running: agent configuration on the left, what the client receives on the right](docs/captura.jpg)](https://proyectos-mindset-code.web.app/agentforge)
+
+*[Open the live demo](https://proyectos-mindset-code.web.app/agentforge)*
+
 ---
 
 ## The problem this solves
