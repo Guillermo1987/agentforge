@@ -24,6 +24,11 @@ jobs:
       - name: Instalar exactamente lo que fija el lockfile
         run: npm ci
 
+      - name: Pruebas
+        # Comprueban lo que el compilador no ve: rutas de assets,
+        # variables de entorno documentadas, reglas de seguridad.
+        run: npm test
+
       - name: Compilar
         run: npm run build
 
