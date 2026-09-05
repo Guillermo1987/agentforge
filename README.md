@@ -108,7 +108,7 @@ what makes one agent per client viable in the first place.
 
 Released under the **[MIT License](LICENSE)**.
 
-- **Web:** [mindset-code.com](https://mindset-code.com/es)
+- **Web:** [mindset-code.com](https://mindset-code.com)
 - **Email:** contacto@mindset-code.com
 
 ---
@@ -198,7 +198,7 @@ Organizado en 5 épicas (ver tablero del proyecto):
 ## Modelo de negocio
 
 AgentForge se contrata desde el catálogo de Mindset & Code, donde el alcance y el precio de
-cada encargo van por escrito: **[AgentForge](https://mindset-code.com/es/codigo/agentforge)**.
+cada encargo van por escrito: **[AgentForge](https://mindset-code.com/codigo/agentforge)**.
 
 Lo relevante técnicamente es que corre íntegramente sobre capas gratuitas o autoalojadas
 —Firebase Spark, n8n propio—, así que el coste de operación por agente desplegado se queda
@@ -216,11 +216,11 @@ cerca de cero. Eso es justamente lo que hace viable un agente por cliente.
 
 Publicado bajo la **[Licencia MIT](LICENSE)**.
 
-- **Web:** [mindset-code.com](https://mindset-code.com/es)
+- **Web:** [mindset-code.com](https://mindset-code.com)
 - **Email:** contacto@mindset-code.com
 
 ---
 
-**Ficha del proyecto:** [AgentForge en mindset-code.com](https://mindset-code.com/es/codigo/agentforge) — qué problema resuelve, para quién y con qué está construido.
+**Ficha del proyecto:** [AgentForge en mindset-code.com](https://mindset-code.com/codigo/agentforge) — qué problema resuelve, para quién y con qué está construido.
 
-*Mindset & Code · asesoría fiscal y tecnológica · [mindset-code.com](https://mindset-code.com/es)*
+*Mindset & Code · asesoría fiscal y tecnológica · [mindset-code.com](https://mindset-code.com)*
